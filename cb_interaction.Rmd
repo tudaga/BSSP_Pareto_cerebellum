@@ -1,0 +1,59 @@
+---
+title: "example_cb.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exploring Seurat single cell objects 
+
+In these scripts you'll be using data from our cerebellum study to demonstrate simple Seurat object manipulation and
+visualizations (including ones similar to those in the original publication).
+
+First download the data with gsutil (ask Aleks/Velina to give you read access to appropriate bucket). 
+```{bash, eval=FALSE, engine="sh"}
+gsutil cp gs://cerebellum_data/data/final_redo/seurat/rann/ubc_seurat2_3.RDS .
+```
+
+
+```{r packages}
+library(Seurat)
+```
+
+
+```{r load_data}
+# this is just my working directory -- you can skip this line
+setwd('/home/vkozarev/final_redo/seurat/rann/')
+ubc_s = readRDS('ubc_seurat2_3.RDS')
+# these are some of the important metadata used
+# including sex, cerebellar region (lobule), and named cluster
+head(ubc_s@meta.data)
+```
+
+This object has a pre-computed tSNE embedding, which we can then use to visualize cluster labels, gene expression, and other features.
+
+```{r plotting_ubcs}
+# Plot with cluster labels
+TSNEPlot(ubc_s, do.label = T)
+# Plot expression for some genes 
+FeaturePlot(ubc_s, c('Grm1', 'Calb2', 'Plcb4', 'Plcb1'), cols.use = c('yellow', 'purple'))
+# Plot and group by cerebellar region 
+DimPlot(ubc_s, reduction.use = 'tsne', group.by = 'region')
+```
+
+We can also easily calculate other types of lower dimensional embeddings, like UMAP. This object was converted to a Seurat object from a liger object, so carries 'inmf' data.
+``` {r umap, echo=T, eval=FALSE}
+ubc_s = RunUMAP(ubc_s, reduction.use = 'inmf', dims.use = setdiff(1:15, 6))
+DimPlot(ubc_s, reduction.use = 'umap')
+```
+
+We can plot dot plots, which help us visualize the expresssion of markers across groups of cells.
+``` {r dotplot}
+# First log-normalized the data for better visualization
+ubc_s = NormalizeData(ubc_s)
+# set the order for the levels
+ubc_s@ident = factor(ubc_s@ident, levels = c('Brinp2_On_UBCs', 'Intermediate_UBCs', 'Calb2_Off_UBCs'), ordered = T)
+DotPlot(ubc_s, genes.plot = c('Grm1', 'Plcb4', 'Calb2', 'Plcb1'))
+```
