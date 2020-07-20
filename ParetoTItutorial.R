@@ -68,7 +68,8 @@ install.packages("GEOquery")
 #Warning in install.packages 
 #  package GEOquery is not available (for R version 4.0.2)
 R.version
-library(GEOquery)
+
+# library(GEOquery)
 
 
 # uncomment to load data -------------------------------------------------------
