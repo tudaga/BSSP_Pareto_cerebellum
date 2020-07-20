@@ -69,20 +69,27 @@ install.packages("GEOquery")
 #  package GEOquery is not available (for R version 4.0.2)
 R.version
 library(GEOquery)
+
+
 # uncomment to load data -------------------------------------------------------
-gse = GEOquery::getGEO("GSE84498", GSEMatrix = TRUE)
-filePaths = GEOquery::getGEOSuppFiles("GSE84498", fetch_files = T, baseDir = "./processed_data/")
+# gse = GEOquery::getGEO("GSE84498", GSEMatrix = TRUE)
+# filePaths = GEOquery::getGEOSuppFiles("GSE84498", fetch_files = T, baseDir = "./processed_data/")
 
-filePaths = c("./processed_data/GSE84498/GSE84498_experimental_design.txt.gz",
-              "./processed_data/GSE84498/GSE84498_umitab.txt.gz")
-design = fread(filePaths[1], stringsAsFactors = F)
-data = fread(filePaths[2], stringsAsFactors = F, header = T)
+# filePaths = c("./processed_data/GSE84498/GSE84498_experimental_design.txt.gz",
+#              "./processed_data/GSE84498/GSE84498_umitab.txt.gz")
+# design = fread(filePaths[1], stringsAsFactors = F)
+# data = fread(filePaths[2], stringsAsFactors = F, header = T)
 
-data = as.matrix(data, rownames = "gene")
+# data = as.matrix(data, rownames = "gene")
+
+# this is just my working directory -- you can skip this line
+ubc_s = readRDS('../ubc_seurat2_3.RDS')
+# these are some of the important metadata used
+# including sex, cerebellar region (lobule), and named cluster
+head(ubc_s@meta.data)
 
 # convert to single cell experiment
-hepatocytes = SingleCellExperiment(assays = list(counts = data),
-                                   colData = design)
+hepatocytes = as.SingleCellExperiment(ubc_s)
 
 # look at mitochondrial-encoded MT genes
 mito.genes = grep(pattern = "^mt-",
