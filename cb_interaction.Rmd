@@ -1,5 +1,6 @@
+#take seurat object turn it into single cell experiment
 ---
-title: "example_cb.Rmd"
+title: "cb_interaction.Rmd"
 output: html_document
 ---
 
@@ -13,52 +14,43 @@ In these scripts you'll be using data from our cerebellum study to demonstrate s
 visualizations (including ones similar to those in the original publication).
 
 First download the data with gsutil (ask Aleks/Velina to give you read access to appropriate bucket). 
-```{bash, eval=FALSE, engine="sh"}
-gsutil cp gs://cerebellum_data/data/final_redo/seurat/rann/ubc_seurat2_3.RDS .
-```
+#```{bash, eval=FALSE, engine="sh"}
+#gsutil cp gs://cerebellum_data/data/final_redo/seurat/rann/ubc_seurat2_3.RDS .
+#```
 
 
 ```{r packages}
-# To make sure R uses the correct conda enviroment you can run this when you start R:
-reticulate::use_condaenv("reticulate_PCHA", conda = "auto",
-                         required = TRUE) # set TRUE to force R to use reticulate_PCHA
 library(Seurat)
-library(SingleCellExperiment)
-
-library(scran)
-
 library(scater)
+library(SingleCellExperiment)
 library(ParetoTI)
-
-library(ggplot2)
-library(ggpubr)
 ```
 
 
 ```{r load_data}
 # this is just my working directory -- you can skip this line
-ubc_s = readRDS('ubc_seurat2_3.RDS')
+# setwd('/home/vkozarev/final_redo/seurat/rann/')
+# ubc_s = readRDS('/Users/graceluettgen/BSSP_Pareto_cerebellum-master/ubc_seurat2_3.RDS')
+ubc_s <- readRDS('ubc_seurat2_3.RDS')
+ubc_s = UpdateSeuratObject(ubc_s)
+ubc_sce <- as.SingleCellExperiment(ubc_s)
 # these are some of the important metadata used
 # including sex, cerebellar region (lobule), and named cluster
-head(ubc_s@meta.data)
+head(colData(ubc_sce))
+# head(ubc_s@meta.data)
 ```
 
 This object has a pre-computed tSNE embedding, which we can then use to visualize cluster labels, gene expression, and other features.
 
 ```{r plotting_ubcs}
-
-# Update the Seurat Object from 2.3 to 3
-ubc_s <- UpdateSeuratObject(ubc_s)
-
-
-# Convert to SingleCellExperiment
-ubc_sce <- as.SingleCellExperiment(ubc_s)
-ubc_sce
-
 # Plot with cluster labels
-plotTSNE(ubc_sce, colour_by = "ident")
+# ubc_s = UpdateSeuratObject(ubc_s)
+# TSNEPlot(ubc_s, label = T)
+ plotTSNE(ubc_sce, colour_by = "ident")
 
-# Looks similar to the FeaturePlot
+# Plot expression for some genes 
+# FeaturePlot(ubc_s, c('Grm1', 'Calb2', 'Plcb4', 'Plcb1'), cols = c('yellow', 'purple'))
+
 grm1 <- plotReducedDim(ubc_sce, 'TSNE', colour_by = "Grm1", point_alpha = 1, point_size = 2) + scale_colour_gradient2(low = "red", high = "purple", mid = "yellow", midpoint = 0, space = "Lab", na.value = "grey50", guide = "colourbar", aesthetics = c("colour", "fill")) + ggtitle("Grm1")
 
 calb2 <- plotReducedDim(ubc_sce, 'TSNE', colour_by = "Calb2", point_alpha = 1, point_size = 2) + scale_colour_gradient2(low = "red", high = "purple", mid = "yellow", midpoint = 0, space = "Lab", na.value = "grey50", guide = "colourbar", aesthetics = c("colour", "fill")) + ggtitle("Calb2")
@@ -67,55 +59,45 @@ plcb4 <- plotReducedDim(ubc_sce, 'TSNE', colour_by = "Plcb4", point_alpha = 1, p
 
 plcb1 <- plotReducedDim(ubc_sce, 'TSNE', colour_by = "Plcb1", point_alpha = 1, point_size = 2) + scale_colour_gradient2(low = "red", high = "purple", mid = "yellow", midpoint = 0, space = "Lab", na.value = "grey50", guide = "colourbar", aesthetics = c("colour", "fill")) + ggtitle("Plcb1")
 
-finalExpression <- ggarrange(grm1, calb2, plcb4, plcb1)
+ggarrange(grm1, calb2, plcb4, plcb1)
 
 
-tsne <- TSNEPlot(ubc_s, label = T)
 
-fp <- FeaturePlot(ubc_s, c('Grm1', 'Calb2', 'Plcb4', 'Plcb1'), cols = c('yellow', 'purple'))
 # Plot and group by cerebellar region 
-dimplot = DimPlot(ubc_s, reduction = 'tsne', group.by = 'region')
-
-
-#```{r plotting_ubcs}
-#ubc_s <- UpdateSeuratObject(ubc_s)
-# Plot with cluster labels
-#TSNEPlot(ubc_s, label = T)
-# Plot expression for some genes 
-#FeaturePlot(ubc_s, c('Grm1', 'Calb2', 'Plcb4', 'Plcb1'), cols = c('yellow', 'purple'))
-# Plot and group by cerebellar region 
-#DimPlot(ubc_s, reduction = 'tsne', group.by = 'region')
-```
+# DimPlot(ubc_s, reduction = 'tsne', group.by = 'region')
+ plotReducedDim(ubc_sce, 'TSNE', colour_by = "region")
 ```
 
 We can also easily calculate other types of lower dimensional embeddings, like UMAP. This object was converted to a Seurat object from a liger object, so carries 'inmf' data.
 ``` {r umap, echo=T, eval=FALSE}
-ubc_s = RunUMAP(ubc_s, reduction = 'inmf', dims = setdiff(1:15, 6))
-dimmedplot = DimPlot(ubc_s, reduction = 'umap')
-ubc_sce = runUMAP(ubc_sce, dimred="INMF", n_dimred=setdiff(1:15, 6))
-final_umap_SCE <- plotUMAP(ubc_sce, colour_by = "ident", ncomponents= c(2, 1)) + scale_y_reverse() + scale_x_reverse() + coord_flip()
+#ubc_s = RunUMAP(ubc_s, reduction = 'inmf', dims = setdiff(1:15, 6))
+ubc_sce = runUMAP(ubc_sce,   dimred="INMF", n_dimred=setdiff(1:15, 6), scale = T)
+
+plotUMAP(ubc_sce, colour_by = "ident", ncomponents= c(2, 1))+ scale_y_reverse() + scale_x_reverse() + coord_flip()
+#DimPlot(ubc_s, reduction = 'umap')
 ```
 
 We can plot dot plots, which help us visualize the expresssion of markers across groups of cells.
 ``` {r dotplot}
 # First log-normalized the data for better visualization
-ubc_s = NormalizeData(ubc_s)
-
-# Normalize
-ubc_sce = logNormCounts(ubc_sce)
+#ubc_s = NormalizeData(ubc_s)
 
 # set the order for the levels
-ubc_s@active.ident = factor(ubc_s@active.ident, levels = c('Brinp2_On_UBCs', 'Intermediate_UBCs', 'Calb2_Off_UBCs'), ordered = T)
+#ubc_s@active.ident = factor(ubc_s@active.ident, levels = c('Brinp2_On_UBCs', 'Intermediate_UBCs', 'Calb2_Off_UBCs'), ordered = T)
 
+# test = logNormCounts(ubc_s.sce)
+test = copy(ubc_sce)
+# counts(test) = as.matrix(counts(test))
+test = scran::computeSumFactors(test)
+test = scater::logNormCounts(test, pseudo_count = 1)
+# logcounts(test)[0:5, 0:5]
+# test = normalizeData(test)
+test$ident = factor(test$ident, levels = c('Brinp2_On_UBCs', 'Intermediate_UBCs', 'Calb2_Off_UBCs'), ordered = T)
 
 DotPlot(ubc_s, features = c('Grm1', 'Plcb4', 'Calb2', 'Plcb1'))
 
-SCEDotPlot = logNormCounts(ubc_sce)
-SCEDotPlot$ident = factor(SCEDotPlot$ident, levels = c('Brinp2_On_UBCs', 'Intermediate_UBCs', 'Calb2_Off_UBCs'), ordered = T)
-SCEDotPlot <- plotDots(SCEDotPlot, group = "ident", features = c('Grm1', 'Plcb4', 'Calb2', 'Plcb1'),
-max_ave = 1, low_color = "white", high_color = "blue")
 
-finalDotPlot <- SCEDotPlot + labs(x = "Identity") + coord_flip() + theme(panel.grid.major = element_blank(), axis.line = element_line(colour = "black"))
+plotDots(test, features = c('Grm1', 'Plcb4', 'Calb2', 'Plcb1'), group = "ident", low_color = "white", high_color = "blue") + labs(x = "Identity") + coord_flip() + theme(panel.grid.major = element_blank(), axis.line = element_line(colour = "black"))
 
 
 
