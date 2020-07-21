@@ -51,6 +51,9 @@ library(doParallel)
 
 ### The real start of this program
 
+###### <- This start indicates an error somewhere near those lines. There is 
+# none here though
+
 # Read in UBC data (stored one directory level above)
 ubc_s <- readRDS('../ubc_seurat2_3.RDS')
 
@@ -62,7 +65,7 @@ head(ubc_s@meta.data)
 # Convert to single cell experiment
 ubc_sce = as.SingleCellExperiment(ubc_s)
 
-# Replaced hepatocytes with ubc_sce
+### Replaced hepatocytes with ubc_sce
 
 # look at mitochondrial-encoded MT genes
 mito.genes = grep(pattern = "^mt-",
@@ -117,8 +120,10 @@ ubc_sce = scater::logNormCounts(ubc_sce)
 # plus pseudo count of 1, divide by the normalizing factor, and take log
 ubc_sce = scater::logNormCounts(ubc_sce, log = FALSE) # just normalize
 
+##### Error here -- mostly because of sparse matrix
+
 # Find principal components
-ubc_sce = scater::runPCA(ubc_sce, ncomponents = 7,
+ubc_sce = scater::runPCA(ubc_sce,
                              scale = T, exprs_values = "logcounts")
 # Plot PCA colored by batch
 scater::plotReducedDim(ubc_sce, ncomponents = 3, dimred = "PCA",
