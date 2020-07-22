@@ -19,7 +19,7 @@ ParetoTI::install_py_pcha(method = "conda",
                                              "geosketch", "pydot", "scikit-learn==0.20",
                                              "umap-learn"))
 reticulate::py_discover_config("py_pcha")
-
+library(reticulate)
 # Run separately if you want to change the conda param
 # To make sure R uses the correct conda enviroment you can run this when you start R:
 reticulate::use_condaenv("reticulate_PCHA", conda = "auto",
@@ -33,8 +33,6 @@ reticulate::use_condaenv("reticulate_PCHA", conda = "auto",
 
 # No need for GEOquery since we're loading in our own data as a Seurat object
 R.version
-
-
 
 ### Load more (essential) libraries prior to usage
 
@@ -50,6 +48,19 @@ library(doRNG)
 library(doParallel)
 
 ### The real start of this program
+
+# Parallelization will be done through forking 
+cores_with_hyper <- detectCores()
+physical <- detectCores(logical = FALSE)
+cores_with_hyper
+physical
+
+# Parallel test: 
+# (src: https://bookdown.org/rdpeng/rprogdatascience/parallel-computation.html)
+
+r <- mclapply(1:6, function(i) {Sys.sleep(10)}, mc.cores = 6) 
+
+## Do nothing for 10 seconds     ## Split this job across 6 cores
 
 ###### <- This start indicates an error somewhere near those lines. There is 
 # none here though
@@ -90,17 +101,17 @@ ubc_sce$all_mito_genes = colSums(counts(ubc_sce[mitochondria_located_genes, ])) 
 
 # subset to the celltype of interest
 # remove batches of different cells (probably non-hepatocytes)
-ubc_sce = ubc_sce[, !ubc_sce$batch %in% c("AB630", "AB631")]
-table(ubc_sce$batch)
-
+# ubc_sce = ubc_sce[, !ubc_sce$batch %in% c("AB630", "AB631")]
+# table(ubc_sce$batch)
+ 
 # remove cells with more less than 1000 or more than 30000 UMI
 ubc_sce = ubc_sce[, colSums(counts(ubc_sce)) > 1000 &
                             colSums(counts(ubc_sce)) < 30000]
 
 # remove cells that express less than 1% of albumine
-alb_perc = counts(ubc_sce)["Alb",] / colSums(counts(ubc_sce))
+# alb_perc = counts(ubc_sce)["Alb",] / colSums(counts(ubc_sce))
 
-ubc_sce = ubc_sce[, alb_perc > 0.01]
+# ubc_sce = ubc_sce[, alb_perc > 0.01]
 
 # remove genes with too many zeros (> 95% cells)
 ubc_sce = ubc_sce[rowMeans(counts(ubc_sce) > 0) > 0.05,]
@@ -120,28 +131,29 @@ ubc_sce = scater::logNormCounts(ubc_sce)
 # plus pseudo count of 1, divide by the normalizing factor, and take log
 ubc_sce = scater::logNormCounts(ubc_sce, log = FALSE) # just normalize
 
-##### Error here -- mostly because of sparse matrix
-
 # Find principal components
 ubc_sce = scater::runPCA(ubc_sce,
                              scale = T, exprs_values = "logcounts")
 # Plot PCA colored by batch
 scater::plotReducedDim(ubc_sce, ncomponents = 3, dimred = "PCA",
-                       colour_by = "batch")
+                       colour_by = "ident")
 
 PCs4arch = t(reducedDim(ubc_sce, "PCA"))
 
 # Fit k=2:8 polytopes to Hepatocytes to find which k best describes the data ####
 # find archetypes
 ?k_fit_pch
-
+start.time <- Sys.time()
 arc_ks = k_fit_pch(PCs4arch, ks = 2:8, check_installed = T,
                    bootstrap = T, bootstrap_N = 200, maxiter = 1000,
-                   #bootstrap_type = "m", 
+                   bootstrap_type = "m", 
                    seed = 2543, 
                    volume_ratio = "t_ratio", # set to "none" if too slow
                    delta=0, conv_crit = 1e-04, order_type = "align",
-                   sample_prop = 0.75)
+                   sample_prop = 0.75, clust_options = c(cores = parallel::detectCores() - 2, cluster_type = "FORK"))
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
 
 # Show variance explained by a polytope with each k (cumulative)
 plot_arc_var(arc_ks, type = "varexpl", point_size = 2, line_size = 1.5) + theme_bw()
@@ -161,32 +173,34 @@ plot_arc_var(arc_ks, type = "t_ratio", point_size = 2, line_size = 1.5) + theme_
 # Examine the polytope with best k & look at known markers of subpopulations ####
 # fit a polytope with bootstrapping of cells to see stability of positions
 arc = fit_pch_bootstrap(PCs4arch, n = 200, sample_prop = 0.75, seed = 235,
-                        noc = 4, delta = 0, conv_crit = 1e-04)
-#, type = "m")
+                        noc = 4, delta = 0, conv_crit = 1e-04, type = "m",
+                        clust_options = c(cluster_type = "FORK"))
+
+# These all use some gene that does not exist in the UBC dataset
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Alb",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Grm1",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Alb (Albumine)")
+plotly::layout(p_pca, title = "UBCs colored by Grm1")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Cyp2e1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Calb2",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Cyp2e1")
+plotly::layout(p_pca, title = "UBCs colored by Calb2")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Gpx1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Plcb4",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Gpx1")
+plotly::layout(p_pca, title = "UBCs colored by Plcb4")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Apoa2",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Plcb1",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Apoa2")
+plotly::layout(p_pca, title = "UBCs colored by Plcb1")
 
 # You can also check which cells have high entropy of logistic regression 
 # predictions when classifying all cells in a tissue into cell types. 
@@ -200,9 +214,9 @@ arc_1 = fit_pch(PCs4arch, volume_ratio = "t_ratio", maxiter = 500,
 # check that positions are similar to bootstrapping average from above
 p_pca = plot_arc(arc_data = arc_1, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5, 
-                 data_lab = as.numeric(logcounts(ubc_sce["Alb",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Grm1",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Alb")
+plotly::layout(p_pca, title = "UBCs colored by Grm1")
 
 # Find genes and gene sets enriched near vertices ####
 # Map GO annotations and measure activities
@@ -260,8 +274,9 @@ pch_rand = randomise_fit_pch(PCs4arch, arc_data = arc_1,
                              replace = FALSE, bootstrap_N = NA,
                              volume_ratio = "t_ratio",
                              maxiter = 500, delta = 0, conv_crit = 1e-4,
-                             #type = "m", 
-                             clust_options = list(cores = 3))
+                             type = "m", 
+                             clust_options = c(cluster_type = "FORK")) # Used to be list(cores = 3)
+
 # use type m to run on a single machine or cloud
 # type = "m", clust_options = list(cores = 3))
 # use clustermq (type cmq) to run as jobs on a computing cluster (higher parallelisation)
