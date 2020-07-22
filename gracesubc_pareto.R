@@ -188,6 +188,26 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
                  text_size = 60, data_size = 6) 
 plotly::layout(p_pca, title = "UBCs colored by Plcb1")
 
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$ident == "Brinp2_On_UBCs"),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by on UBCs")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$ident == "Calb2_Off_UBCs"),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by off UBCs")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
+
+unique(ubc_sce@colData$ident)
+as.numeric(ubc_sce@colData$ident == "Calb2_Off_UBCs")
+
 # You can also check which cells have high entropy of logistic regression 
 # predictions when classifying all cells in a tissue into cell types. 
 # These could have been misclassified by the method and wrongly assigned 
