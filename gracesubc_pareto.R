@@ -70,6 +70,7 @@ ubc_sce = scater::logNormCounts(ubc_sce, log = FALSE) # just normalize
 
 
 # Find principal components
+## start
 ubc_sce = scater::runPCA(ubc_sce, ncomponents = 7,
                              scale = T, exprs_values = "logcounts")
 
@@ -92,6 +93,7 @@ arc_ks = k_fit_pch(PCs4arch, ks = 2:8, check_installed = T,
                    volume_ratio = "t_ratio", # set to "none" if too slow
                    delta=0, conv_crit = 1e-04, order_type = "align",
                    sample_prop = 0.75)
+##end
 
 # Show variance explained by a polytope with each k (cumulative)
 plot_arc_var(arc_ks, type = "varexpl", point_size = 2, line_size = 1.5) + theme_bw()
@@ -107,7 +109,6 @@ plot_arc_var(arc_ks, type = "total_var", point_size = 2, line_size = 1.5) +
 
 # Show t-ratio
 plot_arc_var(arc_ks, type = "t_ratio", point_size = 2, line_size = 1.5) + theme_bw()
-plot_arc_var(arc_1, type = "t_ratio", point_size = 2, line_size = 1.5) + theme_bw()
 
 # Examine the polytope with best k & look at known markers of subpopulations ####
 # fit a polytope with bootstrapping of cells to see stability of positions
@@ -144,6 +145,7 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
                  text_size = 60, data_size = 6) 
 plotly::layout(p_pca, title = "UBCs colored by Epha6")
 
+
 # vertex 4
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
@@ -151,14 +153,7 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
                  text_size = 60, data_size = 6) 
 plotly::layout(p_pca, title = "UBCs colored by Plcb4")
 
-#archetype 1
-p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
-                 which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce[labs$lab[1,2],])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by archetype 1")
-
-
+length(as.numeric(ubc_sce@colData$ident == "Brinp2_On_UBCs"))
 #Identity plots
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
@@ -186,7 +181,7 @@ plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
 arc_1 = fit_pch(PCs4arch, volume_ratio = "t_ratio", maxiter = 500,
                 noc = 4, delta = 0,
                 conv_crit = 1e-04)
-arc_1
+
 # check that positions are similar to bootstrapping average from above
 p_pca = plot_arc(arc_data = arc_1, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5, 
@@ -220,13 +215,93 @@ data_attr = merge_arch_dist(arc_data = arc_1, data = PCs4arch,
 enriched_genes = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                         features = data_attr$features_col,
                                         bin_prop = 0.1, method = "BioQC")
-enriched_genes
 
 enriched_sets = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                        features = data_attr$colData_col,
                                        bin_prop = 0.1, method = "BioQC")
 
-enriched_sets
+
+#enriched genes by archetype
+arc1genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_1"))])
+arc2genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_2"))])
+arc3genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_3"))])
+arc4genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_4"))])
+
+#enriched sets by archetype
+arc1sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_1"))])
+arc2sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_2"))])
+arc3sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_3"))])
+arc4sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_4"))])
+
+
+#archetype 1 appears to correspond to ATP production/metabolism
+arc1sets
+#archetype 2 appears to correspond to 
+arc2sets
+# Arc. 3 distinguished by genes for building/breaking down (at least, I think that's what they
+# mean by metabolism) heparan sulfate proteoglycan, a protein used for regulating
+# synaptic development
+arc3sets
+# Arc. 4 distinguished by genes for proteins in the ephrin receptor signaling pathway.
+# According to the internet, this pathway is important for neuronal migration
+# during development (related to glutamate signalling, which I remember from the paper
+# distinguished the 2 original sub-types). Potentially related to the striping
+# of Purkinje cells? The EphB1 receptor interacts with NCK1 
+# (https://www.genecards.org/cgi-bin/carddisp.pl?gene=EPHB1), a gene expressed "medium"
+# in Purkinje cells (https://www.proteinatlas.org/ENSG00000158092-NCK1/tissue/cerebellum)
+arc4sets
+
+
+
+# archetype 1--sets and p-values
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("establishment_of_mitochondrion_localization"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("establishment_of_mitochondrion_localization"))]
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("energy_coupled_proton_transport__down_electrochemical_gradient"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("energy_coupled_proton_transport__down_electrochemical_gradient"))]
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("ATP_synthesis_coupled_proton_transport"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("ATP_synthesis_coupled_proton_transport"))]
+
+
+# archetype 2--sets and p-values; second set also somewhat likely to be associated
+# with archetype 3?
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("positive_regulation_of_small_GTPase_mediated_signal_transduction"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("positive_regulation_of_small_GTPase_mediated_signal_transduction"))]
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("positive_regulation_of_G1_S_transition_of_mitotic_cell_cycle"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("positive_regulation_of_G1_S_transition_of_mitotic_cell_cycle"))]
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("granulocyte_chemotaxis"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("granulocyte_chemotaxis"))]
+
+# archetype 3--sets and p-values--second set also somewhat likely to be associated
+# with archetype 2?
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("heparan_sulfate_proteoglycan_metabolic_process"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("heparan_sulfate_proteoglycan_metabolic_process"))]
+enriched_sets$x_name[which(enriched_sets$y_name %in% 
+                             c("heparan_sulfate_proteoglycan_biosynthetic_process"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("heparan_sulfate_proteoglycan_biosynthetic_process"))]
+
+# archetype 4--set and p-values
+enriched_sets$x_name[which(enriched_sets$y_name %in% c("ephrin_receptor_signaling_pathway"))]
+enriched_sets$p[which(enriched_sets$y_name %in% c("ephrin_receptor_signaling_pathway"))]
+
+
+enriched_sets$p[which(enriched_sets$y_name %in% arc1sets)]
+
+# plotting by Ephb1
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Ephb1",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Ephb1")
+
+
+
 
 # Take a look at top genes and functions for each archetype
 labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriched_sets,
@@ -236,8 +311,6 @@ labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriche
                           order_by = "mean_diff", order_decreasing = T,
                           min_max_diff_cutoff_g = 0.4, min_max_diff_cutoff_f = 0.03)
 
-labs$lab
-labs
 p_pca = plot_arc(arc_data = arc, data = PCs4arch,
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = activ$ribosomal_large_subunit_biogenesis,
@@ -272,7 +345,7 @@ Sys.time() - start
 # # plot background distribution of t-ratio and show p-value
 #plot(pch_rand, type = c("t_ratio"), nudge_y = 5)
 
-pch_rand 
-pch_rand$
+pch_rand
+
 
 
