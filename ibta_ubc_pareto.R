@@ -66,7 +66,7 @@ r <- mclapply(1:6, function(i) {Sys.sleep(10)}, mc.cores = 6)
 # none here though
 
 # Read in UBC data (stored one directory level above)
-ubc_s <- readRDS('../ubc_seurat2_3.RDS')
+ubc_s <- readRDS('../ubc_seurat2.RDS')
 
 ubc_s <- UpdateSeuratObject(ubc_s)
 
@@ -103,10 +103,10 @@ ubc_sce$all_mito_genes = colSums(counts(ubc_sce[mitochondria_located_genes, ])) 
 # remove batches of different cells (probably non-hepatocytes)
 # ubc_sce = ubc_sce[, !ubc_sce$batch %in% c("AB630", "AB631")]
 # table(ubc_sce$batch)
- 
+
 # remove cells with more less than 1000 or more than 30000 UMI
 ubc_sce = ubc_sce[, colSums(counts(ubc_sce)) > 1000 &
-                            colSums(counts(ubc_sce)) < 30000]
+                    colSums(counts(ubc_sce)) < 30000]
 
 # remove cells that express less than 1% of albumine
 # alb_perc = counts(ubc_sce)["Alb",] / colSums(counts(ubc_sce))
@@ -133,7 +133,7 @@ ubc_sce = scater::logNormCounts(ubc_sce, log = FALSE) # just normalize
 
 # Find principal components
 ubc_sce = scater::runPCA(ubc_sce,
-                             scale = T, exprs_values = "logcounts")
+                         scale = T, exprs_values = "logcounts")
 # Plot PCA colored by batch
 scater::plotReducedDim(ubc_sce, ncomponents = 3, dimred = "PCA",
                        colour_by = "ident")
@@ -142,6 +142,8 @@ PCs4arch = t(reducedDim(ubc_sce, "PCA"))
 
 # Fit k=2:8 polytopes to Hepatocytes to find which k best describes the data ####
 # find archetypes
+# PCHA algorithm is the method that I will talk about to find the contours and the hull
+# PCA is rotating the data into the X/Y axis to observe the data
 ?k_fit_pch
 start.time <- Sys.time()
 arc_ks = k_fit_pch(PCs4arch, ks = 2:8, check_installed = T,
@@ -150,7 +152,7 @@ arc_ks = k_fit_pch(PCs4arch, ks = 2:8, check_installed = T,
                    seed = 2543, 
                    volume_ratio = "t_ratio", # set to "none" if too slow
                    delta=0, conv_crit = 1e-04, order_type = "align",
-                   sample_prop = 0.75, clust_options = c(cores = parallel::detectCores() - 2, cluster_type = "FORK"))
+                   sample_prop = 0.75, clust_options = c(cluster_type = "FORK"))
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
@@ -176,13 +178,22 @@ arc = fit_pch_bootstrap(PCs4arch, n = 200, sample_prop = 0.75, seed = 235,
                         noc = 4, delta = 0, conv_crit = 1e-04, type = "m",
                         clust_options = c(cluster_type = "FORK"))
 
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
+
 # These all use some gene that does not exist in the UBC dataset
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Grm1",])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Grm1")
+                 data_lab = as.numeric(logcounts(ubc_sce["Hs3st4",])),
+                 text_size = 60, data_size = 6)
+plotly::layout(p_pca, title = "UBCs colored by Hs3st4")
+
+#library(htmlwidgets)
+#saveWidget(p_pca, "test.html", selfcontained = F, libdir = "lib")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
@@ -211,12 +222,19 @@ plotly::layout(p_pca, title = "UBCs colored by Plcb1")
 arc_1 = fit_pch(PCs4arch, volume_ratio = "t_ratio", maxiter = 500,
                 noc = 4, delta = 0,
                 conv_crit = 1e-04)
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
+
 # check that positions are similar to bootstrapping average from above
 p_pca = plot_arc(arc_data = arc_1, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5, 
-                 data_lab = as.numeric(logcounts(ubc_sce["Grm1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Intermediate_UBCs",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Grm1")
+plotly::layout(p_pca, title = "UBCs colored by Intermediate UBCs")
 
 # Find genes and gene sets enriched near vertices ####
 # Map GO annotations and measure activities
@@ -245,6 +263,7 @@ enriched_sets = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                        features = data_attr$colData_col,
                                        bin_prop = 0.1, method = "BioQC")
 
+
 # Take a look at top genes and functions for each archetype
 labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriched_sets,
                           cutoff_genes = 0.01, cutoff_sets = 0.05, 
@@ -269,13 +288,13 @@ plotly::layout(p_pca, title = "ribosomal_large_subunit_biogenesis activity")
 # use permutations within each dimension - this is only possible for less than 8 
 # vertices because computing convex hull gets exponentially slower with more dimensions
 start = Sys.time()
-pch_rand = randomise_fit_pch(PCs4arch, arc_data = arc_1,
-                             n_rand = 1000,
-                             replace = FALSE, bootstrap_N = NA,
-                             volume_ratio = "t_ratio",
-                             maxiter = 500, delta = 0, conv_crit = 1e-4,
-                             type = "m", 
-                             clust_options = c(cluster_type = "FORK")) # Used to be list(cores = 3)
+#pch_rand = randomise_fit_pch(PCs4arch, arc_data = arc_1,
+#                             n_rand = 1000,
+#                             replace = FALSE, bootstrap_N = NA,
+#                             volume_ratio = "t_ratio",
+#                             maxiter = 500, delta = 0, conv_crit = 1e-4,
+#                             type = "m", 
+#                             clust_options = c(cluster_type = "FORK")) # Used to be list(cores = 3)
 
 # use type m to run on a single machine or cloud
 # type = "m", clust_options = list(cores = 3))
@@ -286,8 +305,8 @@ pch_rand = randomise_fit_pch(PCs4arch, arc_data = arc_1,
 Sys.time() - start
 
 # # plot background distribution of t-ratio and show p-value
-plot(pch_rand, type = c("t_ratio"), nudge_y = 5)
+#plot(pch_rand, type = c("t_ratio"), nudge_y = 5)
 
-pch_rand
+#pch_rand
 
 
