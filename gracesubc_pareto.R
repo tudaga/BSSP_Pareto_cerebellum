@@ -117,20 +117,16 @@ arc = fit_pch_bootstrap(PCs4arch, n = 200, sample_prop = 0.75, seed = 235,
 
 #, type = "m")
 
-
-# I was able to eliminate the errors that kept popping up by adding this line of
-# code--I think that somewhere in the lines above PCs4arch was indirectly modified,
-# so I'm just re-making the object here
 PCs4arch = t(reducedDim(ubc_sce, "PCA"))
 
-# vertex 1
+# arch 1--Top 3 enriched genes (according to labs)
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Ckb",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Plpp4",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Ckb")
+plotly::layout(p_pca, title = "UBCs colored by Plpp4")
 
-# vertex 2
+
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Ubb",])),
@@ -138,7 +134,34 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
 plotly::layout(p_pca, title = "UBCs colored by Ubb")
 
 
-# vertex 3
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Hsp90ab1",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Hsp90ab1")
+
+
+# arch 2--Top enriched gene (according to labs)
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Sgcd",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Sgcd")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Fam155a",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Fam155a")
+
+
+# arch 3-- These are the only 2 genes generated from Labs that I could find so
+# far that seem enriched for archetype 3 visually
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Lingo2",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Lingo2")
+
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Epha6",])),
@@ -146,25 +169,37 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
 plotly::layout(p_pca, title = "UBCs colored by Epha6")
 
 
-# vertex 4
+# arch 4--top 2 enriched genes (according to labs) and Ephb1
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Plcb4",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Kcnip4",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Plcb4")
+plotly::layout(p_pca, title = "UBCs colored by Kcnip4")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Dgkb",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Dgkb")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Rac1",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Rac1")
 
-length(as.numeric(ubc_sce@colData$ident == "Brinp2_On_UBCs"))
 #Identity plots
+# On UBCs (arch 4)
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Brinp2_On_UBCs"),
                  text_size = 60, data_size = 6) 
 plotly::layout(p_pca, title = "UBCs colored by on UBCs")
+# Off UBCs (arch 2)
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Calb2_Off_UBCs"),
                  text_size = 60, data_size = 6) 
 plotly::layout(p_pca, title = "UBCs colored by off UBCs")
+# Intermediate UBCs (arch 1 and 3) 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
@@ -185,9 +220,9 @@ arc_1 = fit_pch(PCs4arch, volume_ratio = "t_ratio", maxiter = 500,
 # check that positions are similar to bootstrapping average from above
 p_pca = plot_arc(arc_data = arc_1, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5, 
-                 data_lab = as.numeric(logcounts(ubc_sce["Plcb1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Lingo2",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Plcb1")
+plotly::layout(p_pca, title = "UBCs colored by Lingo2 (Checking above prediction)")
 
 # Find genes and gene sets enriched near vertices ####
 # Map GO annotations and measure activities
@@ -215,93 +250,10 @@ data_attr = merge_arch_dist(arc_data = arc_1, data = PCs4arch,
 enriched_genes = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                         features = data_attr$features_col,
                                         bin_prop = 0.1, method = "BioQC")
-
+enriched_genes[which(enriched_genes$x_name %in% c("archetype_3"))]
 enriched_sets = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                        features = data_attr$colData_col,
                                        bin_prop = 0.1, method = "BioQC")
-
-
-#enriched genes by archetype
-arc1genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_1"))])
-arc2genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_2"))])
-arc3genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_3"))])
-arc4genes = as.vector(labs$enriched$y_name[which(labs$enriched$arch_name %in% c("archetype_4"))])
-
-#enriched sets by archetype
-arc1sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_1"))])
-arc2sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_2"))])
-arc3sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_3"))])
-arc4sets = as.vector(labs$enriched_sets$y_name[which(labs$enriched_sets$x_name %in% c("archetype_4"))])
-
-
-#archetype 1 appears to correspond to ATP production/metabolism
-arc1sets
-#archetype 2 appears to correspond to 
-arc2sets
-# Arc. 3 distinguished by genes for building/breaking down (at least, I think that's what they
-# mean by metabolism) heparan sulfate proteoglycan, a protein used for regulating
-# synaptic development
-arc3sets
-# Arc. 4 distinguished by genes for proteins in the ephrin receptor signaling pathway.
-# According to the internet, this pathway is important for neuronal migration
-# during development (related to glutamate signalling, which I remember from the paper
-# distinguished the 2 original sub-types). Potentially related to the striping
-# of Purkinje cells? The EphB1 receptor interacts with NCK1 
-# (https://www.genecards.org/cgi-bin/carddisp.pl?gene=EPHB1), a gene expressed "medium"
-# in Purkinje cells (https://www.proteinatlas.org/ENSG00000158092-NCK1/tissue/cerebellum)
-arc4sets
-
-
-
-# archetype 1--sets and p-values
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("establishment_of_mitochondrion_localization"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("establishment_of_mitochondrion_localization"))]
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("energy_coupled_proton_transport__down_electrochemical_gradient"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("energy_coupled_proton_transport__down_electrochemical_gradient"))]
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("ATP_synthesis_coupled_proton_transport"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("ATP_synthesis_coupled_proton_transport"))]
-
-
-# archetype 2--sets and p-values; second set also somewhat likely to be associated
-# with archetype 3?
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("positive_regulation_of_small_GTPase_mediated_signal_transduction"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("positive_regulation_of_small_GTPase_mediated_signal_transduction"))]
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("positive_regulation_of_G1_S_transition_of_mitotic_cell_cycle"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("positive_regulation_of_G1_S_transition_of_mitotic_cell_cycle"))]
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("granulocyte_chemotaxis"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("granulocyte_chemotaxis"))]
-
-# archetype 3--sets and p-values--second set also somewhat likely to be associated
-# with archetype 2?
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("heparan_sulfate_proteoglycan_metabolic_process"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("heparan_sulfate_proteoglycan_metabolic_process"))]
-enriched_sets$x_name[which(enriched_sets$y_name %in% 
-                             c("heparan_sulfate_proteoglycan_biosynthetic_process"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("heparan_sulfate_proteoglycan_biosynthetic_process"))]
-
-# archetype 4--set and p-values
-enriched_sets$x_name[which(enriched_sets$y_name %in% c("ephrin_receptor_signaling_pathway"))]
-enriched_sets$p[which(enriched_sets$y_name %in% c("ephrin_receptor_signaling_pathway"))]
-
-
-enriched_sets$p[which(enriched_sets$y_name %in% arc1sets)]
-
-# plotting by Ephb1
-p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
-                 which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Ephb1",])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Ephb1")
-
-
-
 
 # Take a look at top genes and functions for each archetype
 labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriched_sets,
@@ -311,11 +263,25 @@ labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriche
                           order_by = "mean_diff", order_decreasing = T,
                           min_max_diff_cutoff_g = 0.4, min_max_diff_cutoff_f = 0.03)
 
+#enriched genes by archetype
+arc1stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_1"))]
+arc2stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_2"))]
+arc3stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_3"))]
+arc4stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_4"))]
+arc2stats
+#enriched sets by archetype
+arc1sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_1"))]
+arc2sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_2"))]
+arc3sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_3"))]
+arc4sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_4"))]
+
+# plotting by ribosomal_large_subunit_biogenesis
 p_pca = plot_arc(arc_data = arc, data = PCs4arch,
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = activ$ribosomal_large_subunit_biogenesis,
                  text_size = 60, data_size = 6)
 plotly::layout(p_pca, title = "ribosomal_large_subunit_biogenesis activity")
+
 
 # Randomise variables to measure goodness of observed fit ####
 # To measure goodness of observed fit I compare observed tetrahedron shape to shape 
@@ -346,6 +312,235 @@ Sys.time() - start
 #plot(pch_rand, type = c("t_ratio"), nudge_y = 5)
 
 pch_rand
+
+
+
+
+
+###### MODIFIED CEREBELLUM SPATIAL PLOTTING ######
+
+# used for spatial plotting
+arc_by_cells = bin_cells_by_arch(data_attr$data, data_attr$arc_col, return_names = T)
+
+# the .csv files are located in the google bucket:
+# gs://cerebellum_data/vkozarev/coords/
+#reticulate::use_condaenv("reticulate_PCHA", conda = "auto",
+#    required = TRUE) 
+install.packages("sp")
+install.packages("viridisLite")
+install.packages("RColorBrewer")
+# set up plotting coordinates and Polygons
+library(sp)
+library(viridisLite)
+library(Seurat)
+library(RColorBrewer)
+
+coordsI<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsI_half.csv")
+coordsII<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsII_half.csv")
+coordsIII<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsIII_half.csv")
+coordsIX<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsIX_half.csv")
+coordsVI<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsVI_half.csv")
+coordsVII<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsVII_half.csv")
+coordsVIII<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsVIII_half.csv")
+coordsX<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsX_half.csv")
+coordsCul<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordscul_half.csv")
+
+coordsan12<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsan12.csv")
+coordsan22<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsan22.csv")
+coordsprm2<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsprm2.csv")
+coordssim2<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordssim2.csv")
+coordscop2<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordscop2.csv")
+coordsf2<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordsf2.csv")
+coordspfl2<-read.csv("/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/coords/coordspf2.csv")
+
+IP<-Polygon(coordsI,hole=F)
+IIP<-Polygon(coordsII,hole=F)
+IIIP<-Polygon(coordsIII,hole=F)
+CulP<-Polygon(coordsCul,hole=F)
+VIP<-Polygon(coordsVI,hole=F)
+VIIP<-Polygon(coordsVII,hole=F)
+VIIIP<-Polygon(coordsVIII,hole=F)
+IXP<-Polygon(coordsIX,hole=F)
+XP<-Polygon(coordsX,hole=F)
+
+an12<-Polygon(coordsan12,hole=F)
+an22<-Polygon(coordsan22,hole=F)
+prm2<-Polygon(coordsprm2,hole=F)
+sim2<-Polygon(coordssim2,hole=F)
+f2<-Polygon(coordsf2,hole=F)
+pfl2<-Polygon(coordspfl2,hole=F)
+
+# created object cop2 (not in orig. file)
+cop2 <- Polygon(coordscop2,hole=F)
+
+IP2<-Polygons(list(IP), "I")
+IIP2<-Polygons(list(IIP), "II")
+IIIP2<-Polygons(list(IIIP), "III")
+CulP2<-Polygons(list(CulP), "CUL")
+VIP2<-Polygons(list(VIP), "VI")
+VIIP2<-Polygons(list(VIIP), "VII")
+VIIIP2<-Polygons(list(VIIIP), "VIII")
+IXP2<-Polygons(list(IXP), "IX")
+XP2<-Polygons(list(XP), "X")
+# do only one half of the whole thing
+AN1P<-Polygons(list(an12), "AN1")
+AN2P<-Polygons(list(an22), "AN2")
+PRMP<-Polygons(list(prm2), "PRM")
+SIMP<-Polygons(list(sim2), "SIM")
+COPP<-Polygons(list(cop2), "COP")
+FLOCP<-Polygons(list(f2), "F")
+PARP<-Polygons(list(pfl2), "PF")
+
+SPs = SpatialPolygons(list(IP2,
+                           IIP2,
+                           IIIP2,
+                           CulP2,
+                           VIP2,
+                           VIIP2,
+                           VIIIP2,
+                           IXP2,
+                           XP2,
+                           AN1P,
+                           AN2P,
+                           PRMP,
+                           SIMP,
+                           COPP,
+                           FLOCP,
+                           PARP))
+
+# plot gene data from seurat object cluster onto coordinates 
+#spatial_enrichment_map = function(seurat, gene, cluster = NULL, quantile.p = 0.5, use.pos.expr = T, use.raw = T,
+                                # order_regions = NULL, do.print = T, color_divergent = F, return_df = F) {
+  
+seurat =  readRDS('/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/ubc_seurat2_3.RDS')
+cluster = "Archetype 1" # other archetypes: cluster = "Archetype 2" cluster = "Archetype 3" cluster = "Archetype 4"
+quantile.p = 0.5
+use.pos.expr = T
+use.raw = T
+order_regions = NULL
+do.print = T
+color_divergent = T
+return_df = F
+
+  
+  # right now this assumes all regions are represented in all cell types -- fix later
+  region_prop = table(seurat@meta.data$region) / ncol(seurat@raw.data)
+  # watch out for partial matching!
+  levels_include = levels(factor(seurat@meta.data$region))
+  if (is.null(order_regions)) {
+    order_regions = c("I","II", "III", "CUL", "VI", "VII", "VIII",  "IX","X","AN1", "AN2",
+                      "PRM", "SIM", "COP", "F",  "PF")
+  }
+  if (!is.null(cluster)) {
+    if(cluster == "Archetype 1")
+      high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
+    else if(cluster == "Archetype 2")
+      high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
+    else if(cluster == "Archetype 3")
+      high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_3]
+    else if(cluster == "Archetype 4")
+      high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_4]
+    else
+      high_express = names(seurat@ident)[which(seurat@ident == cluster)]
+    
+    title = paste0('Cluster ', cluster)
+  } else {
+    data.use = seurat@raw.data[gene, ]
+    if (!use.raw) {
+      data.use = seurat@scale.data[gene, ]
+      use.scaled = T
+    } else {
+      use.scaled = F
+    }
+    if (use.pos.expr) {
+      data.use = data.use[data.use > 0]
+    }
+    cutoff = quantile(data.use, probs = c(quantile.p))
+    if (do.print) { print(cutoff) }
+    high_express = WhichCells(seurat, subset.name = gene, accept.low = cutoff, 
+                              use.raw = use.raw, use.scaled = use.scaled)
+    title = paste0(gene, ", quantile = ", quantile.p)
+  }
+  if (do.print) { print(table(seurat@meta.data[high_express,]$region)) }
+  gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include)) / 
+    sum(table(factor(seurat@meta.data[high_express,]$region, levels = levels_include)))
+  if (do.print) {
+    barplot((gene_prop / region_prop)[order_regions], las = 2, main = title, 
+            ylab = "Relative Proportion of high expressing cells")#, ylim = c(0, 1000))
+    abline(h = 1.0)
+  }
+  
+  values = data.frame((gene_prop / region_prop)[order_regions])
+  row.names(values) = order_regions
+  colnames(values) = c('region', 'avg')
+  values[['log_avg']] = log(values$avg, base = 2)
+  
+  
+  if (return_df) {
+    
+    return(values)
+  } else {
+    # look in cerebellum analysis functions to see how these are made 
+    Sps.df<-SpatialPolygonsDataFrame(SPs, values, match.ID = TRUE)
+    
+    # nn<-data.frame(Sps.df@data)
+    # nn<-round(nn, 7)
+    
+    if (color_divergent) {
+      
+      col_names = RColorBrewer:::brewer.pal(11,"RdBu")
+      # cols = colorRampPalette(colors = rev(col_names), space="Lab")(50)
+      # palpos = gplots::colorpanel(sum(values$log_avg>0),high = 'Red')
+      # palneg = gplots::colorpanel(sum(values$log_avg<0), 'White', 'Blue')
+      
+      palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(floor((max(values$avg) - 1) * 50))
+      palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(floor((1 - min(values$avg)) * 50))
+      
+      palette <- c(rev(palneg),palpos)
+      
+      # final attempt
+      cols <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(50))
+      max_abs <- max(abs(values$avg - 1))
+      # add an extra 0.1 plus because the top color can get lost
+      brk <- lattice::do.breaks(c(0.99-max_abs, 1.01 + max_abs), 50)
+      # print(brk)
+      first_true <- which.max(brk > min(values$avg))
+      last_true <- which.max(brk > max(values$avg))
+      # print(first_true)
+      # print(last_true)
+      # print(brk > max(values$avg))
+      # print(length(brk))
+      # print(length(cols))
+      brk <- brk[(first_true -1):min(last_true, length(brk))]
+      cols <- cols[(first_true -1):min(last_true, length(cols))]
+      
+      spplot(Sps.df, zcol="avg",
+             main = title, col.regions= cols,
+             at = brk)
+   
+      # colorkey = list(col = cols, 
+      #                 at = brk))
+    } else {
+      spplot(Sps.df, zcol="avg",
+             main = title, col.regions= viridis(50, option = "C"))
+    }
+  }
+
+  # return ((gene_prop / region_prop)[order_regions])
+
+#}
+
+
+  # If you want to print the color map, you have to take away the method header
+  # and set the parameters manually for each case.
+  # ubc_s =  readRDS('/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/ubc_seurat2_3.RDS')
+  #spatial_enrichment_map(ubc_s, cluster = 'Archetype 1', color_divergent = T)
+  #spatial_enrichment_map(ubc_s, cluster = 'Archetype 2', color_divergent = T)
+  #spatial_enrichment_map(ubc_s, cluster = 'Archetype 3', color_divergent = T)
+  #spatial_enrichment_map(ubc_s, cluster = 'Archetype 4', color_divergent = T)
+  
+
+
 
 
 
