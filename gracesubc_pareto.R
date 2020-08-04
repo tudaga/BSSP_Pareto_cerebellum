@@ -21,10 +21,9 @@ library(reticulate)
 #### UBC Cells  ####
 #########################
 
-ubc_s = readRDS('/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/ubc_seurat2_3.RDS')
+ubc_s = readRDS('/Users/graceluettgen/Desktop/Github/BSSP_Pareto_cerebellum/ubc_seurat2.RDS')
 ubc_s = UpdateSeuratObject(ubc_s)
 ubc_sce = as.SingleCellExperiment(ubc_s)
-
 
 
 # look at mitochondrial-encoded MT genes
@@ -68,6 +67,20 @@ ubc_sce = scater::logNormCounts(ubc_sce)
 # plus pseudo count of 1, divide by the normalizing factor, and take log
 ubc_sce = scater::logNormCounts(ubc_sce, log = FALSE) # just normalize
 
+A = c(0, 0, 4, 0, 1, 2, 0)
+B = c(3, 0, 8, 1, 0, 0, 0)
+C = c(0, 0, 0, 2, 2, 0, 0)
+D = c(3, 5, 0, 0, 0, 1, 0)
+E = c(0, 3, 0, 0, 0, 3, 0)
+Fvector = c(0, 0, 1, 0, 4, 0, 0)
+k = t(cbind(A, B, C, D, E, Fvector))
+m = copy(ubc_sce[1:7, 1:6])
+as.matrix(counts(m))
+as.matrix(logcounts(m, log = FALSE))
+k
+coldata(m) = k
+
+
 
 # Find principal components
 ## start
@@ -75,12 +88,15 @@ ubc_sce = scater::runPCA(ubc_sce, ncomponents = 7,
                              scale = T, exprs_values = "logcounts")
 
 
-# Plot PCA colored by identity (originally "batch", which does not exist)
+# Plot PCA colored by identity 
 scater::plotReducedDim(ubc_sce, ncomponents = 3, dimred = "PCA",
                        colour_by = "ident")
 
-PCs4arch = t(reducedDim(ubc_sce, "PCA"))
+scater::plotReducedDim(ubc_sce, ncomponents = 7, dimred = "PCA",
+                       colour_by = "ident")
 
+PCs4arch = t(reducedDim(ubc_sce, "PCA"))
+ubc_sce
 
 # Fit k=2:8 polytopes to UBCs to find which k best describes the data ####
 # find archetypes
@@ -113,18 +129,7 @@ plot_arc_var(arc_ks, type = "t_ratio", point_size = 2, line_size = 1.5) + theme_
 # Examine the polytope with best k & look at known markers of subpopulations ####
 # fit a polytope with bootstrapping of cells to see stability of positions
 arc = fit_pch_bootstrap(PCs4arch, n = 200, sample_prop = 0.75, seed = 235,
-                        noc = 4, delta = 0, conv_crit = 1e-04)
-
-#, type = "m")
-
-PCs4arch = t(reducedDim(ubc_sce, "PCA"))
-
-# arch 1--Top 3 enriched genes (according to labs)
-p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
-                 which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Plpp4",])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Plpp4")
+                        noc = 2, delta = 0, conv_crit = 1e-04)
 
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
@@ -182,29 +187,54 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
 plotly::layout(p_pca, title = "UBCs colored by Dgkb")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Rac1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Cacna1a",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Rac1")
+plotly::layout(p_pca, title = "UBCs colored by Cacna1a")
 
 #Identity plots
-# On UBCs (arch 4)
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Brinp2_On_UBCs"),
-                 text_size = 60, data_size = 6) 
+                 text_size = 60, data_size = 2) 
 plotly::layout(p_pca, title = "UBCs colored by on UBCs")
-# Off UBCs (arch 2)
+
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Calb2_Off_UBCs"),
-                 text_size = 60, data_size = 6) 
+                 text_size = 60, data_size = 2) 
 plotly::layout(p_pca, title = "UBCs colored by off UBCs")
-# Intermediate UBCs (arch 1 and 3) 
+
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
-                 text_size = 60, data_size = 6) 
+                 text_size = 60, data_size = 2) 
 plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
+
+# by region
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$region == "X"),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by X")
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$region == "IX"),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by IX")
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(ubc_sce@colData$region == "PRM"),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by PRM")
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Ntng1",])),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by Ntng1")
 
 
 # You can also check which cells have high entropy of logistic regression 
@@ -213,16 +243,17 @@ plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
 # to UBCs, or these could be doublets.
 
 # find archetypes on all data (allows using archetype weights to describe cells)
-arc_1 = fit_pch(PCs4arch, volume_ratio = "t_ratio", maxiter = 500,
-                noc = 4, delta = 0,
+
+arc_1 = fit_pch(PCs4arch, volume_ratio = "t_ratio",  maxiter = 500,
+                noc = 2, delta = 0,
                 conv_crit = 1e-04)
 
 # check that positions are similar to bootstrapping average from above
 p_pca = plot_arc(arc_data = arc_1, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5, 
-                 data_lab = as.numeric(logcounts(ubc_sce["Lingo2",])),
+                 data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Lingo2 (Checking above prediction)")
+plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs (Checking above prediction)")
 
 # Find genes and gene sets enriched near vertices ####
 # Map GO annotations and measure activities
@@ -250,7 +281,7 @@ data_attr = merge_arch_dist(arc_data = arc_1, data = PCs4arch,
 enriched_genes = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                         features = data_attr$features_col,
                                         bin_prop = 0.1, method = "BioQC")
-enriched_genes[which(enriched_genes$x_name %in% c("archetype_3"))]
+
 enriched_sets = find_decreasing_wilcox(data_attr$data, data_attr$arc_col,
                                        features = data_attr$colData_col,
                                        bin_prop = 0.1, method = "BioQC")
@@ -262,18 +293,99 @@ labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriche
                           p.adjust.method = "fdr",
                           order_by = "mean_diff", order_decreasing = T,
                           min_max_diff_cutoff_g = 0.4, min_max_diff_cutoff_f = 0.03)
+labs$enriched_genes[arch_name == "archetype_2",]
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Kcnip4",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Kcnip4")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Plcb1",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Plcb1")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Sgcd",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Sgcd")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Auts2",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Auts2")
 
-#enriched genes by archetype
-arc1stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_1"))]
-arc2stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_2"))]
-arc3stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_3"))]
-arc4stats = labs$enriched_genes[which(labs$enriched_genes$arch_name %in% c("archetype_4"))]
-arc2stats
-#enriched sets by archetype
-arc1sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_1"))]
-arc2sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_2"))]
-arc3sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_3"))]
-arc4sets = labs$enriched_sets[which(labs$enriched_sets$x_name %in% c("archetype_4"))]
+
+
+
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Kcnip4",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Kcnip4")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Dgkb",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Dgkb")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Ntng1",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Ntng1")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Dgkg",])),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by Dgkg")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Arpp21",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Arpp21")
+
+
+
+
+
+### Glutamate receptors (metabotropic)
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Grm1",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Grm1")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Grm3",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Grm3")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Grm8",])),
+                 text_size = 60, data_size = 2) 
+plotly::layout(p_pca, title = "UBCs colored by Grm8")
+
+### Glutamate receptors (ionotropic)
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Grid1",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Grid1")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Grid2",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Grid2")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Gria2",])),
+                 text_size = 60, data_size = 6) 
+plotly::layout(p_pca, title = "UBCs colored by Gria2")
+
+
+
+
+
 
 # plotting by ribosomal_large_subunit_biogenesis
 p_pca = plot_arc(arc_data = arc, data = PCs4arch,
@@ -320,8 +432,10 @@ pch_rand
 ###### MODIFIED CEREBELLUM SPATIAL PLOTTING ######
 
 # used for spatial plotting
-arc_by_cells = bin_cells_by_arch(data_attr$data, data_attr$arc_col, return_names = T)
-
+arc_by_cells = bin_cells_by_arch(data_attr$data, data_attr$arc_col, bin_prop = 0.25, return_names = T)
+data_attr$data$Ntng1
+data_attr$data$sample_id
+arc_by_cells$archetype_1
 # the .csv files are located in the google bucket:
 # gs://cerebellum_data/vkozarev/coords/
 #reticulate::use_condaenv("reticulate_PCHA", conda = "auto",
@@ -408,12 +522,12 @@ SPs = SpatialPolygons(list(IP2,
                            FLOCP,
                            PARP))
 
-# plot gene data from seurat object cluster onto coordinates 
-#spatial_enrichment_map = function(seurat, gene, cluster = NULL, quantile.p = 0.5, use.pos.expr = T, use.raw = T,
-                                # order_regions = NULL, do.print = T, color_divergent = F, return_df = F) {
+# modified code--to generate the plots comparing the archetypes, set cluster
+# to one of the four inputs (3 are commented out)
   
-seurat =  readRDS('/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/ubc_seurat2_3.RDS')
-cluster = "Archetype 1" # other archetypes: cluster = "Archetype 2" cluster = "Archetype 3" cluster = "Archetype 4"
+seurat =  readRDS('/Users/graceluettgen/Desktop/Github/BSSP_Pareto_cerebellum/ubc_seurat2.RDS')
+cluster = "Ratio of archetypes 1 : 2" # other archetypes: cluster = "% of archetype 2 per region" 
+            # cluster = "Ratio of archetypes 2 : 1" cluster = "Ratio of archetypes 1 : 2"
 quantile.p = 0.5
 use.pos.expr = T
 use.raw = T
@@ -422,9 +536,15 @@ do.print = T
 color_divergent = T
 return_df = F
 
-  
   # right now this assumes all regions are represented in all cell types -- fix later
-  region_prop = table(seurat@meta.data$region) / ncol(seurat@raw.data)
+  #if (cluster == "Ratio of 2 : 1 divided by the # of cells in the region"|cluster == "Ratio of 1 : 2 divided by the # of cells in the region")
+  {
+    region_prop = 1
+  } #else
+  #{
+   # region_prop = table(seurat@meta.data$region) / ncol(seurat@raw.data)
+  #}
+
   # watch out for partial matching!
   levels_include = levels(factor(seurat@meta.data$region))
   if (is.null(order_regions)) {
@@ -432,14 +552,15 @@ return_df = F
                       "PRM", "SIM", "COP", "F",  "PF")
   }
   if (!is.null(cluster)) {
-    if(cluster == "Archetype 1")
+    if (cluster == "% of archetype 1 per region")
       high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
-    else if(cluster == "Archetype 2")
+    else if (cluster == "% of archetype 2 per region")
       high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
-    else if(cluster == "Archetype 3")
-      high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_3]
-    else if(cluster == "Archetype 4")
-      high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_4]
+    else if (cluster == "Ratio of archetypes 2 : 1"|cluster == "Ratio of archetypes 1 : 2")
+    {
+      high_express1 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
+      high_express2 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
+    }
     else
       high_express = names(seurat@ident)[which(seurat@ident == cluster)]
     
@@ -461,12 +582,29 @@ return_df = F
                               use.raw = use.raw, use.scaled = use.scaled)
     title = paste0(gene, ", quantile = ", quantile.p)
   }
+  table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))
+  table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))
   if (do.print) { print(table(seurat@meta.data[high_express,]$region)) }
-  gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include)) / 
-    sum(table(factor(seurat@meta.data[high_express,]$region, levels = levels_include)))
+  if(cluster == "Ratio of archetypes 2 : 1")
+  {
+    gene_prop = (table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include)) / 
+     table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))) 
+  } else if (cluster == "Ratio of archetypes 1 : 2")
+  {
+    gene_prop = (table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include)) / 
+                        table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))) 
+  } else if (cluster == "% of archetype 1 per region" | cluster == "% of archetype 2 per region")
+  {
+    gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include))/3.17
+  } else
+  {
+    gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include))/ 
+     sum(table(factor(seurat@meta.data[high_express,]$region, levels = levels_include)))
+  }
+  
   if (do.print) {
     barplot((gene_prop / region_prop)[order_regions], las = 2, main = title, 
-            ylab = "Relative Proportion of high expressing cells")#, ylim = c(0, 1000))
+            ylab = "Relative Proportion of high expressing cells")
     abline(h = 1.0)
   }
   
@@ -474,6 +612,7 @@ return_df = F
   row.names(values) = order_regions
   colnames(values) = c('region', 'avg')
   values[['log_avg']] = log(values$avg, base = 2)
+ 
   
   
   if (return_df) {
@@ -495,6 +634,8 @@ return_df = F
       
       palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(floor((max(values$avg) - 1) * 50))
       palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(floor((1 - min(values$avg)) * 50))
+     
+     
       
       palette <- c(rev(palneg),palpos)
       
@@ -529,7 +670,7 @@ return_df = F
   # return ((gene_prop / region_prop)[order_regions])
 
 #}
-
+values
 
   # If you want to print the color map, you have to take away the method header
   # and set the parameters manually for each case.
