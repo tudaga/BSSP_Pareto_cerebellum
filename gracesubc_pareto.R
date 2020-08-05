@@ -67,21 +67,6 @@ ubc_sce = scater::logNormCounts(ubc_sce)
 # plus pseudo count of 1, divide by the normalizing factor, and take log
 ubc_sce = scater::logNormCounts(ubc_sce, log = FALSE) # just normalize
 
-A = c(0, 0, 4, 0, 1, 2, 0)
-B = c(3, 0, 8, 1, 0, 0, 0)
-C = c(0, 0, 0, 2, 2, 0, 0)
-D = c(3, 5, 0, 0, 0, 1, 0)
-E = c(0, 3, 0, 0, 0, 3, 0)
-Fvector = c(0, 0, 1, 0, 4, 0, 0)
-k = t(cbind(A, B, C, D, E, Fvector))
-m = copy(ubc_sce[1:7, 1:6])
-as.matrix(counts(m))
-as.matrix(logcounts(m, log = FALSE))
-k
-coldata(m) = k
-
-
-
 # Find principal components
 ## start
 ubc_sce = scater::runPCA(ubc_sce, ncomponents = 7,
@@ -92,8 +77,6 @@ ubc_sce = scater::runPCA(ubc_sce, ncomponents = 7,
 scater::plotReducedDim(ubc_sce, ncomponents = 3, dimred = "PCA",
                        colour_by = "ident")
 
-scater::plotReducedDim(ubc_sce, ncomponents = 7, dimred = "PCA",
-                       colour_by = "ident")
 
 PCs4arch = t(reducedDim(ubc_sce, "PCA"))
 ubc_sce
@@ -134,38 +117,25 @@ arc = fit_pch_bootstrap(PCs4arch, n = 200, sample_prop = 0.75, seed = 235,
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Ubb",])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Ubb")
-
+                 data_lab = as.numeric(logcounts(ubc_sce["Grm1",])),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by Grm1")
+p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 1.5,
+                 data_lab = as.numeric(logcounts(ubc_sce["Plcb4",])),
+                 text_size = 60, data_size = 4) 
+plotly::layout(p_pca, title = "UBCs colored by Plcb4")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Hsp90ab1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Calb2",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Hsp90ab1")
-
-
-# arch 2--Top enriched gene (according to labs)
+plotly::layout(p_pca, title = "UBCs colored by Calb2")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Sgcd",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Plcb1",])),
                  text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Sgcd")
-p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
-                 which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Fam155a",])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Fam155a")
-
-
-# arch 3-- These are the only 2 genes generated from Labs that I could find so
-# far that seem enriched for archetype 3 visually
-p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
-                 which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Lingo2",])),
-                 text_size = 60, data_size = 6) 
-plotly::layout(p_pca, title = "UBCs colored by Lingo2")
+plotly::layout(p_pca, title = "UBCs colored by Plcb1")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
@@ -207,7 +177,7 @@ plotly::layout(p_pca, title = "UBCs colored by off UBCs")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(ubc_sce@colData$ident == "Intermediate_UBCs"),
-                 text_size = 60, data_size = 2) 
+                 text_size = 60, data_size = 4) 
 plotly::layout(p_pca, title = "UBCs colored by intermediate UBCs")
 
 # by region
@@ -293,7 +263,8 @@ labs = get_top_decreasing(summary_genes = enriched_genes, summary_sets = enriche
                           p.adjust.method = "fdr",
                           order_by = "mean_diff", order_decreasing = T,
                           min_max_diff_cutoff_g = 0.4, min_max_diff_cutoff_f = 0.03)
-labs$enriched_genes[arch_name == "archetype_2",]
+labs$enriched_genes[arch_name == "archetype_1",]
+
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Kcnip4",])),
@@ -301,9 +272,9 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
 plotly::layout(p_pca, title = "UBCs colored by Kcnip4")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Plcb1",])),
+                 data_lab = as.numeric(logcounts(ubc_sce["Ntng1",])),
                  text_size = 60, data_size = 2) 
-plotly::layout(p_pca, title = "UBCs colored by Plcb1")
+plotly::layout(p_pca, title = "UBCs colored by Ntng1")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Sgcd",])),
@@ -330,9 +301,9 @@ p_pca = plot_arc(arc_data = arc, data = PCs4arch,
 plotly::layout(p_pca, title = "UBCs colored by Dgkb")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
-                 data_lab = as.numeric(logcounts(ubc_sce["Ntng1",])),
-                 text_size = 60, data_size = 2) 
-plotly::layout(p_pca, title = "UBCs colored by Ntng1")
+                 data_lab = as.numeric(logcounts(ubc_sce["Ntn1",])),
+                 text_size = 60, data_size = 5) 
+plotly::layout(p_pca, title = "UBCs colored by Unc5c")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Dgkg",])),
@@ -524,9 +495,10 @@ SPs = SpatialPolygons(list(IP2,
 
 # modified code--to generate the plots comparing the archetypes, set cluster
 # to one of the four inputs (3 are commented out)
-  
+
+
 seurat =  readRDS('/Users/graceluettgen/Desktop/Github/BSSP_Pareto_cerebellum/ubc_seurat2.RDS')
-cluster = "Ratio of archetypes 1 : 2" # other archetypes: cluster = "% of archetype 2 per region" 
+cluster = "Prop2" # other archetypes: cluster = "Spatial distribution of archetype 2" 
             # cluster = "Ratio of archetypes 2 : 1" cluster = "Ratio of archetypes 1 : 2"
 quantile.p = 0.5
 use.pos.expr = T
@@ -535,6 +507,7 @@ order_regions = NULL
 do.print = T
 color_divergent = T
 return_df = F
+
 
   # right now this assumes all regions are represented in all cell types -- fix later
   #if (cluster == "Ratio of 2 : 1 divided by the # of cells in the region"|cluster == "Ratio of 1 : 2 divided by the # of cells in the region")
@@ -552,11 +525,11 @@ return_df = F
                       "PRM", "SIM", "COP", "F",  "PF")
   }
   if (!is.null(cluster)) {
-    if (cluster == "% of archetype 1 per region")
+    if (cluster == "Spatial distribution of archetype 1")
       high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
-    else if (cluster == "% of archetype 2 per region")
+    else if (cluster == "Spatial distribution of archetype 2")
       high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
-    else if (cluster == "Ratio of archetypes 2 : 1"|cluster == "Ratio of archetypes 1 : 2")
+    else if (cluster == "Ratio of archetypes 2 : 1"|cluster == "Ratio of archetypes 1 : 2"| cluster == "Prop2")
     {
       high_express1 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
       high_express2 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
@@ -564,7 +537,7 @@ return_df = F
     else
       high_express = names(seurat@ident)[which(seurat@ident == cluster)]
     
-    title = paste0('Cluster ', cluster)
+    title = paste0(cluster)
   } else {
     data.use = seurat@raw.data[gene, ]
     if (!use.raw) {
@@ -593,9 +566,15 @@ return_df = F
   {
     gene_prop = (table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include)) / 
                         table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))) 
-  } else if (cluster == "% of archetype 1 per region" | cluster == "% of archetype 2 per region")
+  } else if (cluster == "Spatial distribution of archetype 1" | cluster == "Spatial distribution of archetype 2")
   {
     gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include))/3.17
+  } else if (cluster == "Prop2")
+  {
+    gene_prop = 2.5*(table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include)) / 
+                   (table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))+
+                      table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))))
+    
   } else
   {
     gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include))/ 
@@ -612,7 +591,7 @@ return_df = F
   row.names(values) = order_regions
   colnames(values) = c('region', 'avg')
   values[['log_avg']] = log(values$avg, base = 2)
- 
+  
   
   
   if (return_df) {
@@ -632,16 +611,21 @@ return_df = F
       # palpos = gplots::colorpanel(sum(values$log_avg>0),high = 'Red')
       # palneg = gplots::colorpanel(sum(values$log_avg<0), 'White', 'Blue')
       
-      palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(floor((max(values$avg) - 1) * 50))
-      palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(floor((1 - min(values$avg)) * 50))
-     
-     
+      #palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(floor((max(values$avg)-1) * 50))
+      #palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(floor((1-min(values$avg)) * 50))
       
+      palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(.5*2.5)
+      palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(2.5)
+      
+      floor((max(values$avg)-1) * 50)
+      max(values$avg)-1
       palette <- c(rev(palneg),palpos)
       
       # final attempt
       cols <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(50))
       max_abs <- max(abs(values$avg - 1))
+ 
+      
       # add an extra 0.1 plus because the top color can get lost
       brk <- lattice::do.breaks(c(0.99-max_abs, 1.01 + max_abs), 50)
       # print(brk)
@@ -670,8 +654,8 @@ return_df = F
   # return ((gene_prop / region_prop)[order_regions])
 
 #}
-values
 
+values
   # If you want to print the color map, you have to take away the method header
   # and set the parameters manually for each case.
   # ubc_s =  readRDS('/Users/graceluettgen/Downloads/BSSP_Pareto_cerebellum-master/ubc_seurat2_3.RDS')
@@ -681,7 +665,7 @@ values
   #spatial_enrichment_map(ubc_s, cluster = 'Archetype 4', color_divergent = T)
   
 
-
+  # Spatial prevalence of archetypes
 
 
 
