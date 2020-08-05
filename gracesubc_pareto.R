@@ -129,12 +129,12 @@ plotly::layout(p_pca, title = "UBCs colored by Plcb4")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Calb2",])),
-                 text_size = 60, data_size = 6) 
+                 text_size = 60, data_size = 4) 
 plotly::layout(p_pca, title = "UBCs colored by Calb2")
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
                  which_dimensions = 1:3, line_size = 1.5,
                  data_lab = as.numeric(logcounts(ubc_sce["Plcb1",])),
-                 text_size = 60, data_size = 6) 
+                 text_size = 60, data_size = 4) 
 plotly::layout(p_pca, title = "UBCs colored by Plcb1")
 
 p_pca = plot_arc(arc_data = arc, data = PCs4arch, 
@@ -496,9 +496,17 @@ SPs = SpatialPolygons(list(IP2,
 # modified code--to generate the plots comparing the archetypes, set cluster
 # to one of the four inputs (3 are commented out)
 
+arc_by_cells$archetype_1 = rownames(ubc_s@meta.data)[ubc_s@meta.data$named_liger_ident == "Brinp2_On_UBCs"]
+arc_by_cells$archetype_2 = rownames(ubc_s@meta.data)[ubc_s@meta.data$named_liger_ident == "Calb2_Off_UBCs"]
+arc_by_cells$archetype_3 = rownames(ubc_s@meta.data)[ubc_s@meta.data$named_liger_ident == "Intermediate_UBCs"]
 
+length(arc_by_cells$archetype_1)
+length(arc_by_cells$archetype_2)
+length(arc_by_cells$archetype_3)
+ubc_s@meta.data$named_liger_ident 
+rownames(ubc_s@meta.data)[ubc_s@meta.data$named_liger_ident == "Brinp2_On_UBCs"]
 seurat =  readRDS('/Users/graceluettgen/Desktop/Github/BSSP_Pareto_cerebellum/ubc_seurat2.RDS')
-cluster = "Prop2" # other archetypes: cluster = "Spatial distribution of archetype 2" 
+cluster = "Ratio of 3 to all" # other archetypes: cluster = "Spatial distribution of archetype 2" 
             # cluster = "Ratio of archetypes 2 : 1" cluster = "Ratio of archetypes 1 : 2"
 quantile.p = 0.5
 use.pos.expr = T
@@ -529,10 +537,11 @@ return_df = F
       high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
     else if (cluster == "Spatial distribution of archetype 2")
       high_express = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
-    else if (cluster == "Ratio of archetypes 2 : 1"|cluster == "Ratio of archetypes 1 : 2"| cluster == "Prop2")
+    else if (cluster == "Ratio of 1 to all"|cluster == "Ratio of 2 to all"| cluster == "Ratio of 3 to all")
     {
       high_express1 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_1]
       high_express2 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_2]
+      high_express3 = rownames(seurat@meta.data)[rownames(seurat@meta.data) %in% arc_by_cells$archetype_3]
     }
     else
       high_express = names(seurat@ident)[which(seurat@ident == cluster)]
@@ -558,17 +567,38 @@ return_df = F
   table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))
   table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))
   if (do.print) { print(table(seurat@meta.data[high_express,]$region)) }
-  if(cluster == "Ratio of archetypes 2 : 1")
+  if(cluster == "Ratio of 2 to all")
   {
-    gene_prop = (table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include)) / 
-     table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))) 
-  } else if (cluster == "Ratio of archetypes 1 : 2")
+    #gene_prop = (table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include)) / 
+     #table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))) 
+    ratio1 = table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))/length(high_express1)
+    ratio2 = table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))/length(high_express2)
+    ratio3 = table(factor(seurat@meta.data[high_express3,]$region, levels = levels_include))/length(high_express3)
+    
+    gene_prop = 2*ratio2/(ratio1+ratio2+ratio3)
+  } else if (cluster == "Ratio of 1 to all")
   {
-    gene_prop = (table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include)) / 
-                        table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))) 
+    #gene_prop = (table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include)) / 
+                        #table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))) 
+    ratio1 = table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))/length(high_express1)
+    ratio2 = table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))/length(high_express2)
+    ratio3 = table(factor(seurat@meta.data[high_express3,]$region, levels = levels_include))/length(high_express3)
+    
+    gene_prop = 2*ratio1/(ratio1+ratio2+ratio3)
+    
+  } else if (cluster == "Ratio of 3 to all")
+  {
+    #gene_prop = (table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include)) / 
+    #table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))) 
+    ratio1 = table(factor(seurat@meta.data[high_express1,]$region, levels = levels_include))/length(high_express1)
+    ratio2 = table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include))/length(high_express2)
+    ratio3 = table(factor(seurat@meta.data[high_express3,]$region, levels = levels_include))/length(high_express3)
+    
+    gene_prop = 2*ratio3/(ratio1+ratio2+ratio3)
+    
   } else if (cluster == "Spatial distribution of archetype 1" | cluster == "Spatial distribution of archetype 2")
   {
-    gene_prop = table(factor(seurat@meta.data[high_express,]$region, levels = levels_include))/3.17
+    
   } else if (cluster == "Prop2")
   {
     gene_prop = 2.5*(table(factor(seurat@meta.data[high_express2,]$region, levels = levels_include)) / 
@@ -614,11 +644,11 @@ return_df = F
       #palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(floor((max(values$avg)-1) * 50))
       #palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(floor((1-min(values$avg)) * 50))
       
-      palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(.5*2.5)
-      palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(2.5)
+      palneg = colorRampPalette(c('white', 'blue'), space = 'Lab')(1)
+      palpos = colorRampPalette(c('white', 'red'), space = 'Lab')(1.5)
       
-      floor((max(values$avg)-1) * 50)
-      max(values$avg)-1
+      #floor((max(values$avg)-1) * 50)
+      #max(values$avg)-1
       palette <- c(rev(palneg),palpos)
       
       # final attempt
@@ -666,6 +696,4 @@ values
   
 
   # Spatial prevalence of archetypes
-
-
 
