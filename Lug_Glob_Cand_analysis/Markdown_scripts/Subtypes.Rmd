@@ -1,0 +1,41 @@
+---
+title: "Subtypes"
+output: html_document
+---
+
+```{r packages, message=FALSE, warning=FALSE, results="hide", echo=FALSE}
+# setting up packages and conda environment
+reticulate::use_condaenv("reticulate_PCHA", conda = "auto", required = TRUE) 
+library(ggplot2)
+library(scater)
+library(scran)
+library(SingleCellExperiment)
+library(parallel)
+library(Seurat)
+library(ParetoTI)
+```
+
+```{r source_utils, echo=FALSE}
+source("/Users/tudaga/Documents/github/BSSP_Pareto_cerebellum/ParetoTI_utils.R")
+```
+
+## Load data and objects
+```{r load}
+load('/Users/tudaga/Documents/github/BSSP_Pareto_cerebellum/Lug_Glob_Cand_analysis/hvgs_lug_glob_cand4.Rdata')
+```
+
+```{r all_subtypes, message=FALSE, warning=FALSE}
+p_pca = plot_arc(arc_data = arc_all, data = PCs4arch, 
+                 which_dimensions = 1:3, line_size = 2.5,
+                 data_lab = data_sce@colData$ident,
+                 text_size = 60, data_size = 3) 
+plotly::layout(p_pca, title = paste0("Colored by subtype ident"))
+```
+
+```{r subtypes_plots, message=FALSE, warning=FALSE}
+l <- htmltools::tagList()
+for (ident in unique(data_sce@colData$ident)) {
+  l[[ident]] <- make_3d_pc_plot_ident(data_sce, arc_all, ident, 2.5, 3)
+}
+l
+```
